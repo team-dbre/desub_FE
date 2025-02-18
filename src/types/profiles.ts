@@ -19,3 +19,14 @@ export type UserData = {
   sub_status: string;
   subscription_info: string | null;
 };
+
+export type UnSubscriptionReason = {
+  id: string;
+  label: string;
+  contents?: string;
+};
+
+export type SubscriptionCancelReason = {
+  cancelled_reason: string[];
+  other_reason?: string;
+};

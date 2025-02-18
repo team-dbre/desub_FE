@@ -15,7 +15,6 @@ const Header = () => {
   const router = useRouter();
   const isAuthenticated = useAppSelector((state: RootState) => state.auth.isAuthenticated);
   const subscriptionStatus = useAppSelector((state: RootState) => state.subscriptionStatus.status);
-  console.log(isAuthenticated, subscriptionStatus);
 
   const pathname = usePathname();
   if (

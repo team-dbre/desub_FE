@@ -2,7 +2,7 @@
 
 import { getUserSession } from './serverAction';
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-import { Plan } from '@/types/plan';
+import type { Plan } from '@/types/plan';
 
 // 유저 데이터 받아오는 함수
 export const requestPayment = async (billingKey: string) => {
@@ -78,3 +78,5 @@ export const requestPayment = async (billingKey: string) => {
 
   return '구독결제가 완료되었습니다';
 };
+
+export const unsubscribed = async () => {};

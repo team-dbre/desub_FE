@@ -1,38 +1,26 @@
 import { useState } from 'react';
 import { Button } from '../ui/Button';
-import { useAppDispatch } from '@/hooks/redux/hooks';
-import { setSubscriptionStatus } from '../../../store/subscriptionStatusSlice';
 import { Alert } from '../ui/Alert';
 import { Confirm } from '../ui/Confirm';
 import Image from 'next/image';
+import { SubscriptionCancelReason, UnSubscriptionReason } from '@/types/profiles';
 
 const Unsubscribed = () => {
-  const dispatch = useAppDispatch();
-  // 구독취소 클릭 시
   const [firstCheckModal, setFirstCheckModal] = useState(false);
-  // 첫번째 팝업 확인 클릭 시
   const [subscriptionModal, setSubscriptionModal] = useState(false);
-  // 구독취소 체크 항목
-  const [selectedReason, setSelectedReason] = useState<UnSubscriptionReason[]>([]);
-  // etc 체크 했는지
   const [isEtc, setIsEtc] = useState(false);
-  // etc 내용
   const [etcContents, setEtcContents] = useState('');
-  // 주의 문구
   const [warningMessage, setWarningMessage] = useState('');
-  // 마지막 확인 알럿
   const [lastCheckModal, setLastCheckModal] = useState(false);
 
-  // 구독현황 상태
-  const handleSubscriptionStatus = () => {
-    dispatch(setSubscriptionStatus('paused'));
+  const selectedReasonInitialValue: SubscriptionCancelReason = {
+    cancelled_reason: [],
+    other_reason: '',
   };
 
-  type UnSubscriptionReason = {
-    id: string;
-    label: string;
-    contents?: string;
-  };
+  const [selectedReason, setSelectedReason] = useState(selectedReasonInitialValue);
+
+  const handleSubscriptionStatus = () => {};
 
   const unSubscriptionReasons: UnSubscriptionReason[] = [
     { id: 'expensive', label: '가격이 비싸서' },
@@ -43,53 +31,63 @@ const Unsubscribed = () => {
     { id: 'etc', label: '기타' },
   ];
 
-  // 첫번째 모달
   const handleFirstCheck = () => {
     setFirstCheckModal(false);
     setSubscriptionModal(true);
-    setSelectedReason([]);
+    setSelectedReason(selectedReasonInitialValue);
     setIsEtc(false);
     setEtcContents('');
     setWarningMessage('');
   };
 
-  // 두번째 모달
   const handleSelectedReason = (item: UnSubscriptionReason) => {
     setWarningMessage('');
     setSelectedReason(prev => {
-      const isSelected = prev.some(reason => reason.id === item.id);
+      const isSelected = prev.cancelled_reason.includes(item.id);
+
       if (isSelected) {
-        if (item.id === 'etc') setIsEtc(false);
-        return prev.filter(reason => reason.id !== item.id);
+        if (item.id === 'etc') {
+          setIsEtc(false);
+        }
+        return {
+          ...prev,
+          cancelled_reason: prev.cancelled_reason.filter(reason => reason !== item.id),
+        };
       } else {
-        if (prev.length >= 3) {
+        if (prev.cancelled_reason.length >= 3) {
           setWarningMessage('구독취소 사유는 최대 3개까지 선택 가능합니다.');
           return prev;
         }
         if (item.id === 'etc') {
           setIsEtc(true);
-          return [...prev, { ...item, contents: etcContents }];
+          return {
+            ...prev,
+            cancelled_reason: [...prev.cancelled_reason, item.id],
+            other_reason: etcContents,
+          };
         }
-        return [...prev, item];
+        return {
+          ...prev,
+          cancelled_reason: [...prev.cancelled_reason, item.id],
+        };
       }
     });
   };
 
-  // 두번째 모달 구취 사유 'etc'
   const handleEtcContents = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const content = e.target.value;
     setEtcContents(content);
     if (content.trim() !== '') {
       setWarningMessage('');
     }
-    setSelectedReason(prev =>
-      prev.map(reason => (reason.id === 'etc' ? { ...reason, contents: content } : reason)),
-    );
+    setSelectedReason(prev => ({
+      ...prev,
+      other_reason: content,
+    }));
   };
 
-  // 두번째 모달 최종 제출
   const handleSubscriptionReasonSubmit = () => {
-    if (selectedReason.length === 0) {
+    if (selectedReason.cancelled_reason.length === 0) {
       setWarningMessage('구독취소 사유를 선택해주세요.');
       return;
     }
@@ -97,27 +95,22 @@ const Unsubscribed = () => {
       setWarningMessage('기타 사유를 입력해주세요.');
       return;
     }
-    console.log(selectedReason);
     setSubscriptionModal(false);
     setLastCheckModal(true);
   };
 
-  // 두번째 모달 x버튼
   const handleSubscriptionReasonModalClose = () => {
     setSubscriptionModal(false);
-    setSelectedReason([]);
     setIsEtc(false);
     setEtcContents('');
     setWarningMessage('');
   };
 
-  // 마지막 모달 최종 제출
   const handleLastCheckSubmit = () => {
     setLastCheckModal(false);
-    console.log('구독 취소 로직');
+    console.log(selectedReason);
   };
 
-  // 마지막 모달 x버튼
   const handleLastCheckModalClose = () => {
     setLastCheckModal(prev => !prev);
   };
@@ -154,7 +147,7 @@ const Unsubscribed = () => {
                     <label key={item.id} className="flex items-center gap-[0.9rem]">
                       <input
                         type="checkbox"
-                        checked={selectedReason.some(reason => reason.id === item.id)}
+                        checked={selectedReason.cancelled_reason.includes(item.id)}
                         onChange={() => handleSelectedReason(item)}
                         className="peer hidden"
                       />

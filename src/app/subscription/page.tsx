@@ -44,7 +44,7 @@ const Subscription = () => {
   useEffect(() => {
     getUserData();
   }, []);
-  console.log(userData);
+
   const handleStarHover = () => {
     setIsBlinking(false);
   };
